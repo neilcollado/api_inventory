@@ -4,7 +4,11 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
 interface AuthRequest extends Request {
-  userId?: number;
+  user?: {
+    userId: number,
+    email?: string,
+    name?: string,
+  };
 }
 
 export const authenticate = (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -16,8 +20,8 @@ export const authenticate = (req: AuthRequest, res: Response, next: NextFunction
   if (!token) return res.status(401).json({ message: 'Access denied' });
 
   try {
-    const payload = jwt.verify(token, JWT_SECRET) as { userId: number };
-    req.userId = payload.userId;
+    const payload = jwt.verify(token, JWT_SECRET) as { userId: number; email?: string; name?: string };
+    req.user = payload;
     next();
   } catch {
     return res.status(401).json({ message: 'Invalid or expired token' });

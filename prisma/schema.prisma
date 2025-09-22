@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -27,10 +27,12 @@ model User {
 
 model Item {
   id          Int      @id @default(autoincrement())
-  name        String
+  link        String
+  image       String?
   description String?
   sku         String   @unique
-  quantity    Int      @default(0)
+  case_pack   String
+  min_order   String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
