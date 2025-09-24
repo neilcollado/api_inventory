@@ -18,7 +18,12 @@ app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '../
 // Routes
 app.use('/auth', authRoute_1.default);
 app.use('/item', itemRoute_1.default);
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    if (process.env.NODE_ENV === "production") {
+        console.log(`Server running on port ${PORT}`);
+    }
+    else {
+        console.log(`Server running on http://localhost:${PORT}`);
+    }
 });

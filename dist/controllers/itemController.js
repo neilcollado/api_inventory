@@ -41,9 +41,14 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createItem = exports.getItemById = exports.getAllItems = void 0;
+exports.deleteItem = exports.createItem = exports.getItemById = exports.getAllItems = void 0;
 const itemModel = __importStar(require("../models/itemModel"));
+const promises_1 = __importDefault(require("fs/promises"));
+const path_1 = __importDefault(require("path"));
 const getAllItems = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const items = yield itemModel.getAllItems();
@@ -72,23 +77,27 @@ const createItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     var _a;
     try {
         const { link, description, sku, case_pack, min_order } = req.body;
-        const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-        // res.json(req.body);
+        let imageUrl;
         const item = yield itemModel.createItem({
             link,
-            image: imageUrl,
             description,
             sku,
             case_pack,
             min_order
         });
+        if (req.file) {
+            const filename = Date.now() + path_1.default.extname(req.file.originalname);
+            const filepath = path_1.default.join("public/uploads", filename);
+            yield promises_1.default.writeFile(filepath, req.file.buffer); // save from memory
+            imageUrl = `/uploads/${filename}`;
+            yield itemModel.updateItem(item.id, { image: imageUrl });
+        }
         res.status(201).json({ message: 'Item created successfully', item });
     }
     catch (error) {
         console.error('CREATE ITEM ERROR:', error);
         // Handle Prisma known errors
         if (error.code === 'P2002') {
-            // Unique constraint violation (e.g., duplicate SKU)
             return res.status(409).json({
                 error: 'SKU already exists',
                 field: (_a = error.meta) === null || _a === void 0 ? void 0 : _a.target
@@ -98,3 +107,22 @@ const createItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () 
     }
 });
 exports.createItem = createItem;
+const deleteItem = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { id } = req.body;
+    try {
+        if (!id) {
+            return res.status(400).json({ message: 'Item ID is required' });
+        }
+        try {
+            yield itemModel.deleteItem(Number(id));
+            res.json({ message: 'Item deleted successfully' });
+        }
+        catch (error) {
+            res.status(500).json({ error: 'Error deleting item' });
+        }
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Error processing request' });
+    }
+});
+exports.deleteItem = deleteItem;

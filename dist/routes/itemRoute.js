@@ -43,4 +43,5 @@ const router = express_1.default.Router();
 router.post('/', upload_1.upload.single('image'), Item.createItem);
 router.get('/', Item.getAllItems);
 router.get('/id', Item.getItemById);
+router.delete('/delete', Item.deleteItem);
 exports.default = router;

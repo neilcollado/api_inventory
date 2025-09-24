@@ -15,3 +15,20 @@ export const createItem = (data: {
     case_pack: string,
     min_order: string
   }) => prisma.item.create({ data });
+
+export const deleteItem = (id: number) =>
+  prisma.item.delete({
+    where: { id },
+  });
+
+export const updateItem = (id: number, data: {
+  link?: string;
+  image?: string;
+  description?: string;
+  sku?: string;
+  case_pack?: string;
+  min_order?: string;
+}) => prisma.item.update({
+  where: { id },
+  data,
+});

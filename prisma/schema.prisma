@@ -11,7 +11,8 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABSET PASSWORD FOR 'dbpwf05223387'@'%' = PASSWORD('new_password');ASE_URL")
+  // url      = env("DATABSET PASSWORD FOR 'dbpwf05223387'@'%' = PASSWORD('new_password');ASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -37,6 +38,17 @@ model Item {
   updatedAt   DateTime @updatedAt
 
   transactions Transaction[]
+  Category     Category?     @relation(fields: [categoryId], references: [id])
+  categoryId   Int?
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Item Item[]
 }
 
 model Transaction {

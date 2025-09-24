@@ -1,5 +1,7 @@
 import { Request, Response } from 'express';
 import * as itemModel from '../models/itemModel';
+import fs from "fs/promises";
+import path from "path";
 
 export const getAllItems = async (req: Request, res: Response) => {
   try {
@@ -27,25 +29,34 @@ export const getItemById = async (req: Request, res: Response) => {
 
 export const createItem = async (req: Request, res: Response) => {
   try {
-    const { link,description, sku, case_pack, min_order } = req.body;
+    const { link, description, sku, case_pack, min_order } = req.body;
 
-    const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
-    // res.json(req.body);
+    let imageUrl: string | undefined;
 
     const item = await itemModel.createItem({ 
       link, 
-      image: imageUrl, 
       description,
       sku,
       case_pack,
-      min_order });
+      min_order 
+    });
+
+    if (req.file) {
+      const filename = Date.now() + path.extname(req.file.originalname);
+      const filepath = path.join("public/uploads", filename);
+
+      await fs.writeFile(filepath, req.file.buffer); // save from memory
+      imageUrl = `/uploads/${filename}`;
+
+      await itemModel.updateItem(item.id, { image: imageUrl });
+    }
+
     res.status(201).json({ message: 'Item created successfully', item });
   } catch (error: any) {
     console.error('CREATE ITEM ERROR:', error);
 
     // Handle Prisma known errors
     if (error.code === 'P2002') {
-      // Unique constraint violation (e.g., duplicate SKU)
       return res.status(409).json({ 
         error: 'SKU already exists', 
         field: error.meta?.target 
@@ -55,3 +66,23 @@ export const createItem = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error creating item' });
   }
 };
+
+export const deleteItem = async (req: Request, res: Response) => {
+  const { id } = req.body;
+
+  try {
+    if( !id ) {
+      return res.status(400).json({ message: 'Item ID is required' });
+    } 
+
+    try {
+      await itemModel.deleteItem(Number(id));
+      res.json({ message: 'Item deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Error deleting item' });
+    }
+
+  } catch (error) {
+    res.status(500).json({ error: 'Error processing request' });
+  }
+}
