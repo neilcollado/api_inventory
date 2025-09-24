@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import e, { Request, Response } from 'express';
 import * as itemModel from '../models/itemModel';
 import fs from "fs/promises";
 import path from "path";
@@ -7,8 +7,9 @@ export const getAllItems = async (req: Request, res: Response) => {
   try {
     const items = await itemModel.getAllItems();
     res.json(items);
-  } catch (error) {
-    res.status(500).json({ error: 'Error fetching items'});
+  } catch (error: any) {
+    console.error("Error fetching items:", error);
+    res.status(500).json({ error: error.message || 'Error fetching items' });
   }
 };
 

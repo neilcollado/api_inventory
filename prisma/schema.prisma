@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../node_modules/.prisma/client"
@@ -11,67 +5,55 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  // url      = env("DATABSET PASSWORD FOR 'dbpwf05223387'@'%' = PASSWORD('new_password');ASE_URL")
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String        @unique
+  password    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   transaction Transaction[]
 }
 
 model Item {
-  id          Int      @id @default(autoincrement())
-  link        String
-  image       String?
-  description String?
-  sku         String   @unique
-  case_pack   String
-  min_order   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  id           Int           @id @default(autoincrement())
+  link         String
+  image        String?
+  description  String?
+  sku          String        @unique
+  case_pack    String
+  min_order    String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   transactions Transaction[]
-  Category     Category?     @relation(fields: [categoryId], references: [id])
-  categoryId   Int?
-}
-
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  Item Item[]
 }
 
 model Transaction {
-  id         Int      @id @default(autoincrement())
+  id         Int             @id @default(autoincrement())
   userId     Int
   itemId     Int
   typeId     Int
   quantity   Int
-  unitPrice  Decimal // Price per unit
-  totalPrice Decimal // unitPrice * quantity
-  createdAt  DateTime @default(now())
+  unitPrice  Decimal
+  totalPrice Decimal
+  createdAt  DateTime        @default(now())
   remarks    String?
+  item       Item            @relation(fields: [itemId], references: [id])
+  type       TransactionType @relation(fields: [typeId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
 
-  user User            @relation(fields: [userId], references: [id])
-  item Item            @relation(fields: [itemId], references: [id])
-  type TransactionType @relation(fields: [typeId], references: [id])
+  @@index([itemId], map: "Transaction_itemId_fkey")
+  @@index([typeId], map: "Transaction_typeId_fkey")
+  @@index([userId], map: "Transaction_userId_fkey")
 }
 
 model TransactionType {
-  id        Int      @id @default(autoincrement())
-  typeName  String //Example:"Intake", "Outtake"
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           Int           @id @default(autoincrement())
+  typeName     String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   transactions Transaction[]
 }
